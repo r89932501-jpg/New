@@ -51,7 +51,7 @@ jobs:
           s = s.replace("back=S.tripStarted?Math.max(W*.1,S.trainLength+120):W*.1;", "back=S.tripStarted?Math.max(W*.18,S.trainLength+120):W*.18;")
           s = s.replace("back=W*0.1, km=S.kmDraw", "back=W*0.18, km=S.kmDraw")
           s = s.replace("oldBack=oldW*.1", "oldBack=oldW*.18")
-          s = s.replace("</canvas>", '</canvas><div class="current-position num" id="currentPosition">— км · — пк</div>')
+          s = s.replace('      <div class="tools" id="tools">', '      <div class="tools" id="tools">\\n      <div class="current-position num" id="currentPosition">— км · — пк</div>')
 
           # Remove all clock displays from the profile screen, leaving the menu clock intact.
           s = s.replace('    <div class="cell"><div class="lbl">Время</div><div class="big num" id="clock">--:--:--</div><div class="sub">Местное · МСК <span class="num" id="mskClock" style="color:#9fd8ff;font-size:14px">--:--:--</span></div></div>', '')
@@ -184,7 +184,7 @@ jobs:
           s = s.replace("setPressed('segWin',String(opts.reduce((a,b)=>Math.abs(b-S.win)<Math.abs(a-S.win)?b:a,opts[0])));", "winScale.value=String(S.win); syncScaleLabels();")
           css = Path("site/shell.css")
           with css.open("a", encoding="utf-8") as f:
-              f.write("\n.current-position{position:absolute;left:10px;bottom:10px;z-index:5;padding:6px 10px;border:1px solid rgba(106,168,255,.48);border-radius:8px;background:rgba(8,14,17,.9);color:#e7f2ff;font:700 14px/1.2 var(--f-num);letter-spacing:.02em;pointer-events:none;box-shadow:0 2px 10px rgba(0,0,0,.25)}@media(max-width:520px){.current-position{left:7px;bottom:7px;padding:5px 8px;font-size:12px}}\n.tb .scale-control{display:flex;flex-direction:column;gap:3px;min-width:150px;flex:1 1 180px}.tb .scale-control .lbl{white-space:nowrap}.tb .scale-control b{color:var(--warn);font-variant-numeric:tabular-nums}.tb .scale-control input[type=range]{width:100%;min-width:140px;height:24px;margin:0;touch-action:pan-x}.tb .btn{flex:0 0 auto}\n")
+              f.write("\n.tools{bottom:calc(8px + env(safe-area-inset-bottom,0px))}.current-position{position:static;margin-left:10px;margin-bottom:0;z-index:5;padding:6px 10px;border:1px solid rgba(106,168,255,.48);border-radius:8px;background:rgba(8,14,17,.9);color:#e7f2ff;font:700 14px/1.2 var(--f-num);letter-spacing:.02em;pointer-events:none;box-shadow:0 2px 10px rgba(0,0,0,.25)}@media(max-width:520px){.current-position{margin-left:10px;padding:5px 8px;font-size:12px}}\n.tb .scale-control{display:flex;flex-direction:column;gap:3px;min-width:150px;flex:1 1 180px}.tb .scale-control .lbl{white-space:nowrap}.tb .scale-control b{color:var(--warn);font-variant-numeric:tabular-nums}.tb .scale-control input[type=range]{width:100%;min-width:140px;height:24px;margin:0;touch-action:pan-x}.tb .btn{flex:0 0 auto}\n")
 
           p.write_text(s, encoding="utf-8")
 
