@@ -93,7 +93,7 @@ jobs:
             }
             ctx.restore();
           });
-"""
+          """
           s = s[:sig_start] + signal_code + s[sig_end:]
 
           # Replace the simple train bar with individual wagons and a locomotive silhouette.
@@ -149,7 +149,7 @@ jobs:
             ctx.fillStyle=C('--mark'); ctx.beginPath(); ctx.moveTo(x0-6,plotTop-12); ctx.lineTo(x0+6,plotTop-12); ctx.lineTo(x0,plotTop-2); ctx.closePath(); ctx.fill();
             ctx.beginPath(); ctx.arc(x0,y0,4.5,0,Math.PI*2); ctx.fillStyle=C('--bg'); ctx.fill(); ctx.lineWidth=2; ctx.stroke();
           }
-"""
+          """
           s = s[:train_start] + train_code + s[train_end:]
 
           s = s.replace(
