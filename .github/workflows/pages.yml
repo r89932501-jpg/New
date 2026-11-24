@@ -309,7 +309,7 @@ jobs:
           }
           """
           css = Path("site/shell.css")
-          css.write_text(css.read_text(encoding="utf-8") + "\\n" + theme_css, encoding="utf-8")
+          css.write_text(css.read_text(encoding="utf-8") + "\n" + theme_css, encoding="utf-8")
 
           navjs = Path("site/shell.js")
           if navjs.exists():
