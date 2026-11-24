@@ -40,6 +40,130 @@ jobs:
           fi
           APP_DIR="$(dirname "$INDEX_FILE")"
           cp -a "$APP_DIR"/. site/
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("site/index.html")
+          s = p.read_text(encoding="utf-8")
+
+          # Remove all clock displays from the profile screen, leaving the menu clock intact.
+          s = re.sub(r'\s*<div class="cell"><div class="lbl">Время</div>.*?</div>\s*(?=</section>)', '\\n', s, count=1, flags=re.S)
+          s = s.replace(
+              '<div class="chips" id="chips"><div class="chip2 msk" id="mskChip"><span class="k">МСК</span><b class="v">--:--:--</b></div></div>',
+              '<div class="chips" id="chips"><div class="chip2 pos" id="posChip"><span class="k">КМ · ПК</span><b class="v">— · —</b></div></div>'
+          )
+          s = s.replace("  $('clock').textContent=new Date().toLocaleTimeString('ru-RU',{hour12:false});\\n", "")
+          s = s.replace("const mskStr=()=>new Date().toLocaleTimeString('ru-RU',{hour12:false,timeZone:'Europe/Moscow'});\\n", "")
+          s = s.replace("$('mskChip').querySelector('.v').textContent=mskStr();\\n", "")
+          s = s.replace("  const now=performance.now(), msk=mskStr();\\n  $('mskChip').querySelector('.v').textContent=msk; $('mskClock').textContent=msk;", "  const now=performance.now();")
+          s = s.replace(
+              "$('kmOverlay').textContent=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';",
+              "const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';\\n  $('kmOverlay').textContent=kmText; $('posChip').querySelector('.v').textContent=Math.floor(km/1000)+' · '+String(pkOf(km)).padStart(2,'0');"
+          )
+
+          # Make the signal markers larger and display signal identifiers at useful zoom levels.
+          sig_start = s.index("  // Светофоры: короткие столбики, привязанные непосредственно к линии профиля")
+          sig_end = s.index("  ctx.restore();\\n  // верхняя ось:", sig_start)
+          signal_code = """  // Светофоры: увеличенная нейтральная пиктограмма с номером.
+          // Жёлтый маркер обозначает только место объекта, а не показание сигнала.
+          let lastSignalLabelX=-Infinity;
+          const signalLabelGap=(W<=3000?34:W<=5000?58:W<=10000?92:Infinity)*k;
+          ds.SG.forEach(sig=>{
+            if(sig.t<a||sig.t>b) return;
+            const x=px(X(sig.t)), y=py(R(sig.t));
+            ctx.save();
+            const mastTop=y-29*k;
+            ctx.lineCap='round'; ctx.strokeStyle='#f2c14e'; ctx.lineWidth=2.2*k;
+            ctx.beginPath(); ctx.moveTo(x,y-2*k); ctx.lineTo(x,mastTop+3*k); ctx.stroke();
+            const bw=10*k,bh=18*k;
+            ctx.fillStyle='#11191d'; ctx.strokeStyle='#e6bd59'; ctx.lineWidth=1.5*k;
+            ctx.beginPath(); ctx.roundRect(x-bw/2,mastTop-bh+4*k,bw,bh,3*k); ctx.fill(); ctx.stroke();
+            ctx.fillStyle='#f2c14e'; ctx.beginPath(); ctx.arc(x,mastTop-5*k,3.4*k,0,Math.PI*2); ctx.fill();
+            ctx.strokeStyle='rgba(255,255,255,.75)'; ctx.lineWidth=1*k;
+            ctx.beginPath(); ctx.moveTo(x-5*k,y); ctx.lineTo(x+5*k,y); ctx.stroke();
+            if(x-lastSignalLabelX>=signalLabelGap && x>padL+12*k && x<w-padR-12*k){
+              const label=String(sig.name); ctx.font=F(11,700,C('--f-num')); ctx.textAlign='center'; ctx.textBaseline='bottom';
+              const tw=ctx.measureText(label).width; const ly=mastTop-10*k;
+              ctx.fillStyle='rgba(8,13,15,.94)'; ctx.fillRect(x-tw/2-5*k,ly-13*k,tw+10*k,15*k);
+              ctx.strokeStyle='rgba(242,193,78,.7)'; ctx.lineWidth=1*k; ctx.strokeRect(x-tw/2-5*k,ly-13*k,tw+10*k,15*k);
+              ctx.fillStyle='#ffe2a0'; ctx.fillText(label,x,ly); lastSignalLabelX=x;
+            }
+            ctx.restore();
+          });
+"""
+          s = s[:sig_start] + signal_code + s[sig_end:]
+
+          # Replace the simple train bar with individual wagons and a locomotive silhouette.
+          train_start = s.index("  // Голова поезда всегда привязана к GPS. Состав тянется назад по фактическому профилю.")
+          train_end = s.index("  drawMarks({px,X,plotTop,plotBot,F,k});", train_start)
+          train_code = """  // Голова состава привязана к GPS. Показываем локомотив и вагоны вдоль профиля.
+          const x0=px(0), y0=py(0);
+          if(S.tripStarted && S.trainLength>0){
+            const tailT=t0-S.trainLength, visibleTail=Math.max(a,tailT);
+            const pPerM=pw/W;
+            ctx.save(); ctx.beginPath(); ctx.rect(padL,plotTop-6,pw,plotBot-plotTop+14); ctx.clip();
+            const ptsTrain=[]; const step=Math.max(8,Math.min(25,S.trainLength/35));
+            for(let m=visibleTail;m<t0;m+=step) ptsTrain.push([px(X(m)),py(R(m))]);
+            ptsTrain.push([x0,y0]);
+            if(ptsTrain.length>1){
+              ctx.beginPath(); ptsTrain.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+              ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#182a35'; ctx.lineWidth=16*k; ctx.stroke();
+              ctx.strokeStyle='#91a7b4'; ctx.lineWidth=1.2*k; ctx.stroke();
+            }
+            if(pPerM*40>=5*k){
+              for(let d=40;d<S.trainLength-12;d+=40){
+                const c0=t0-d-14, c1=t0-d+14; if(c0<visibleTail||c1>t0-25) continue;
+                const p1=projectedPoint(c0),p2=projectedPoint(c1);
+                const dx=p2.x-p1.x,dy=p2.y-p1.y,L=Math.max(7*k,Math.hypot(dx,dy));
+                const ang=Math.atan2(dy,dx),mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2;
+                ctx.save(); ctx.translate(mx,my); ctx.rotate(ang);
+                ctx.fillStyle='#34566a'; ctx.strokeStyle='#c3d1d8'; ctx.lineWidth=1*k;
+                ctx.beginPath(); ctx.roundRect(-L/2,-5.5*k,L,11*k,2*k); ctx.fill(); ctx.stroke();
+                ctx.fillStyle='#9fb4bf'; ctx.fillRect(-L*.28,-3.5*k,Math.max(2*k,L*.56),1.3*k);
+                ctx.fillStyle='#101a20';
+                for(const wx of [-L*.28,L*.28]){ctx.beginPath();ctx.arc(wx,5*k,1.8*k,0,Math.PI*2);ctx.fill();}
+                ctx.restore();
+              }
+            }
+            const back=projectedPoint(t0-27), front=projectedPoint(t0-1);
+            const dx=front.x-back.x,dy=front.y-back.y,L=Math.max(13*k,Math.hypot(dx,dy));
+            const ang=Math.atan2(dy,dx),mx=(front.x+back.x)/2,my=(front.y+back.y)/2;
+            ctx.save(); ctx.translate(mx,my); ctx.rotate(ang);
+            ctx.fillStyle='#d58b2e'; ctx.strokeStyle='#ffe0a0'; ctx.lineWidth=1.5*k;
+            ctx.beginPath(); ctx.roundRect(-L/2,-7*k,L,14*k,3*k); ctx.fill(); ctx.stroke();
+            ctx.fillStyle='#253a46'; ctx.beginPath(); ctx.roundRect(L*.05,-5*k,L*.30,7*k,1.5*k); ctx.fill();
+            ctx.fillStyle='#a9d8e8'; ctx.fillRect(L*.12,-4*k,Math.max(2*k,L*.12),4*k);
+            ctx.fillStyle='#fff4c7'; ctx.beginPath(); ctx.arc(L/2-1*k,0,2.2*k,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#17232b';
+            for(const wx of [-L*.30,L*.30]){ctx.beginPath();ctx.arc(wx,7*k,2*k,0,Math.PI*2);ctx.fill();}
+            ctx.restore(); ctx.restore();
+            if(tailT>=a){ const tx=px(X(tailT)),ty=py(R(tailT)); ctx.fillStyle='#e7eeec';ctx.font=F(11,700);ctx.textAlign='center';ctx.fillText('ХВОСТ',tx,ty-15*k); }
+            ctx.strokeStyle=C('--mark');ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x0,plotTop-4);ctx.lineTo(x0,plotBot);ctx.stroke();
+            ctx.fillStyle=C('--mark');ctx.beginPath();ctx.moveTo(x0-6,plotTop-12);ctx.lineTo(x0+6,plotTop-12);ctx.lineTo(x0,plotTop-2);ctx.closePath();ctx.fill();
+            ctx.fillStyle=C('--warn');ctx.font=F(10,700);ctx.textAlign='left';ctx.fillText('ГОЛОВА GPS',x0+8,plotTop+9);
+          } else {
+            ctx.strokeStyle=C('--mark'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x0,plotTop-4); ctx.lineTo(x0,plotBot); ctx.stroke();
+            ctx.fillStyle=C('--mark'); ctx.beginPath(); ctx.moveTo(x0-6,plotTop-12); ctx.lineTo(x0+6,plotTop-12); ctx.lineTo(x0,plotTop-2); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.arc(x0,y0,4.5,0,Math.PI*2); ctx.fillStyle=C('--bg'); ctx.fill(); ctx.lineWidth=2; ctx.stroke();
+          }
+"""
+          s = s[:train_start] + train_code + s[train_end:]
+
+          s = s.replace(
+              '</style><link rel="stylesheet" href="shell.css">',
+              '.signal-legend{position:absolute;top:7px;right:10px;z-index:4;display:flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid rgba(242,193,78,.35);border-radius:8px;background:rgba(12,17,19,.78);color:#e7eeec;font:600 10px/1.2 var(--f-ui);pointer-events:none}\\n.signal-legend-mark{position:relative;width:8px;height:15px;border-left:2px solid #f2c14e}.signal-legend-mark:before{content:"";position:absolute;left:-5px;top:0;width:8px;height:8px;border-radius:3px;background:#26323a;border:1px solid #f2c14e}.signal-legend-mark:after{content:"";position:absolute;left:-2px;top:3px;width:3px;height:3px;border-radius:50%;background:#f2c14e}@media(max-width:520px){.signal-legend{font-size:9px;top:6px;right:6px;padding:3px 6px}}\\n</style><link rel="stylesheet" href="shell.css">'
+          )
+          p.write_text(s, encoding="utf-8")
+
+          css = Path("site/shell.css")
+          with css.open("a", encoding="utf-8") as f:
+              f.write("\\n.chip2.pos{padding-right:12px;border-color:rgba(106,168,255,.45);background:rgba(12,17,19,.92)}\\n.chip2.pos .k{color:#80b8ff}.chip2.pos .v{color:#e7f2ff;font-size:18px;letter-spacing:.04em}\\n")
+
+          sw = Path("site/sw.js")
+          if sw.exists():
+              sw.write_text(sw.read_text(encoding="utf-8").replace("profile-app-v1","profile-app-v2"), encoding="utf-8")
+          PY
           cat > site/manifest.webmanifest <<'EOF'
           {
             "name": "ПРОФИЛЬ",
