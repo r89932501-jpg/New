@@ -48,23 +48,23 @@ jobs:
           s = p.read_text(encoding="utf-8")
 
           # Remove all clock displays from the profile screen, leaving the menu clock intact.
-          s = re.sub(r'\s*<div class="cell"><div class="lbl">Время</div>.*?</div>\s*(?=</section>)', '\\n', s, count=1, flags=re.S)
+          s = s.replace('    <div class="cell"><div class="lbl">Время</div><div class="big num" id="clock">--:--:--</div><div class="sub">Местное · МСК <span class="num" id="mskClock" style="color:#9fd8ff;font-size:14px">--:--:--</span></div></div>', '')
           s = s.replace(
               '<div class="chips" id="chips"><div class="chip2 msk" id="mskChip"><span class="k">МСК</span><b class="v">--:--:--</b></div></div>',
               '<div class="chips" id="chips"><div class="chip2 pos" id="posChip"><span class="k">КМ · ПК</span><b class="v">— · —</b></div></div>'
           )
-          s = s.replace("  $('clock').textContent=new Date().toLocaleTimeString('ru-RU',{hour12:false});\\n", "")
-          s = s.replace("const mskStr=()=>new Date().toLocaleTimeString('ru-RU',{hour12:false,timeZone:'Europe/Moscow'});\\n", "")
-          s = s.replace("$('mskChip').querySelector('.v').textContent=mskStr();\\n", "")
-          s = s.replace("  const now=performance.now(), msk=mskStr();\\n  $('mskChip').querySelector('.v').textContent=msk; $('mskClock').textContent=msk;", "  const now=performance.now();")
+          s = s.replace("  $('clock').textContent=new Date().toLocaleTimeString('ru-RU',{hour12:false});\n", "")
+          s = s.replace("const mskStr=()=>new Date().toLocaleTimeString('ru-RU',{hour12:false,timeZone:'Europe/Moscow'});\n", "")
+          s = s.replace("$('mskChip').querySelector('.v').textContent=mskStr();\n", "")
+          s = s.replace("  const now=performance.now(), msk=mskStr();\n  $('mskChip').querySelector('.v').textContent=msk; $('mskClock').textContent=msk;", "  const now=performance.now();")
           s = s.replace(
               "$('kmOverlay').textContent=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';",
-              "const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';\\n  $('kmOverlay').textContent=kmText; $('posChip').querySelector('.v').textContent=Math.floor(km/1000)+' · '+String(pkOf(km)).padStart(2,'0');"
+              "const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';\n  $('kmOverlay').textContent=kmText; $('posChip').querySelector('.v').textContent=Math.floor(km/1000)+' · '+String(pkOf(km)).padStart(2,'0');"
           )
 
           # Make the signal markers larger and display signal identifiers at useful zoom levels.
           sig_start = s.index("  // Светофоры: короткие столбики, привязанные непосредственно к линии профиля")
-          sig_end = s.index("  ctx.restore();\\n  // верхняя ось:", sig_start)
+          sig_end = s.index("  ctx.restore();\n  // верхняя ось:", sig_start)
           signal_code = """  // Светофоры: увеличенная нейтральная пиктограмма с номером.
           // Жёлтый маркер обозначает только место объекта, а не показание сигнала.
           let lastSignalLabelX=-Infinity;
@@ -152,13 +152,13 @@ jobs:
 
           s = s.replace(
               '</style><link rel="stylesheet" href="shell.css">',
-              '.signal-legend{position:absolute;top:7px;right:10px;z-index:4;display:flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid rgba(242,193,78,.35);border-radius:8px;background:rgba(12,17,19,.78);color:#e7eeec;font:600 10px/1.2 var(--f-ui);pointer-events:none}\\n.signal-legend-mark{position:relative;width:8px;height:15px;border-left:2px solid #f2c14e}.signal-legend-mark:before{content:"";position:absolute;left:-5px;top:0;width:8px;height:8px;border-radius:3px;background:#26323a;border:1px solid #f2c14e}.signal-legend-mark:after{content:"";position:absolute;left:-2px;top:3px;width:3px;height:3px;border-radius:50%;background:#f2c14e}@media(max-width:520px){.signal-legend{font-size:9px;top:6px;right:6px;padding:3px 6px}}\\n</style><link rel="stylesheet" href="shell.css">'
+              '.signal-legend{position:absolute;top:7px;right:10px;z-index:4;display:flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid rgba(242,193,78,.35);border-radius:8px;background:rgba(12,17,19,.78);color:#e7eeec;font:600 10px/1.2 var(--f-ui);pointer-events:none}\n.signal-legend-mark{position:relative;width:8px;height:15px;border-left:2px solid #f2c14e}.signal-legend-mark:before{content:"";position:absolute;left:-5px;top:0;width:8px;height:8px;border-radius:3px;background:#26323a;border:1px solid #f2c14e}.signal-legend-mark:after{content:"";position:absolute;left:-2px;top:3px;width:3px;height:3px;border-radius:50%;background:#f2c14e}@media(max-width:520px){.signal-legend{font-size:9px;top:6px;right:6px;padding:3px 6px}}\n</style><link rel="stylesheet" href="shell.css">'
           )
           p.write_text(s, encoding="utf-8")
 
           css = Path("site/shell.css")
           with css.open("a", encoding="utf-8") as f:
-              f.write("\\n.chip2.pos{padding-right:12px;border-color:rgba(106,168,255,.45);background:rgba(12,17,19,.92)}\\n.chip2.pos .k{color:#80b8ff}.chip2.pos .v{color:#e7f2ff;font-size:18px;letter-spacing:.04em}\\n")
+              f.write("\n.chip2.pos{padding-right:12px;border-color:rgba(106,168,255,.45);background:rgba(12,17,19,.92)}\n.chip2.pos .k{color:#80b8ff}.chip2.pos .v{color:#e7f2ff;font-size:18px;letter-spacing:.04em}\n")
 
           sw = Path("site/sw.js")
           if sw.exists():
@@ -230,7 +230,7 @@ jobs:
           """
           if "</head>" in html.lower():
               pos = html.lower().find("</head>")
-              html = html[:pos] + additions + "\\n" + html[pos:]
+              html = html[:pos] + additions + "\n" + html[pos:]
           else:
               html = additions + html
           p.write_text(html, encoding="utf-8")
