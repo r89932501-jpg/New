@@ -208,6 +208,115 @@ jobs:
           with css.open("a", encoding="utf-8") as f:
               f.write("\n.chip2.pos{padding-right:12px;border-color:rgba(106,168,255,.45);background:rgba(12,17,19,.92)}\n.chip2.pos .k{color:#80b8ff}.chip2.pos .v{color:#e7f2ff;font-size:18px;letter-spacing:.04em}\n")
 
+          # One visual system across the home screen, profile, handbook, schemes and brakes.
+          theme_css = r"""
+          :root{
+            --c-profile:#f2c14e;--c-faults:#f2c14e;--c-schemes:#f2c14e;--c-brakes:#f2c14e;
+            --app-bg:#0b1012;--app-panel:#131a1d;--app-panel2:#192226;--app-line:#29373d;
+            --app-text:#e7eeec;--app-muted:#91a09e;--app-accent:#f2c14e;
+          }
+          html[data-sec]{--sec:#f2c14e!important}
+          html[data-sec] body{
+            background:radial-gradient(900px 380px at 50% -140px,rgba(242,193,78,.10),transparent 70%),#0b1012!important;
+            color:var(--app-text)!important;
+          }
+          html[data-sec] h1,html[data-sec] h2,html[data-sec] h3,html[data-sec] .title{
+            font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;
+          }
+          .tabbar nav{background:rgba(16,23,26,.94)!important;border-color:rgba(242,193,78,.18)!important}
+          .tabbar a[aria-current=page]{color:#f2c14e!important;background:rgba(242,193,78,.13)!important}
+          .tabbar a[aria-current=page]::after{background:#f2c14e!important}
+          .tabbar a[aria-current=page] svg{color:#f2c14e!important}
+          .tabbar a{color:#9aa8a5!important}
+          .hub-top{padding-bottom:16px}
+          .logo{color:#241b08!important;background:linear-gradient(145deg,#ffe08a,#d99a22)!important;box-shadow:0 6px 22px rgba(242,193,78,.22)!important;border:1px solid rgba(255,224,138,.4)}
+          .wm{letter-spacing:.11em!important}
+          .wm-sub{color:#a7b3af!important}
+          .hub-clock em{color:#f2c14e!important}
+          .hello{color:#a7b3af!important}
+          .hero{border:1px solid rgba(242,193,78,.3)!important;background:linear-gradient(145deg,#1b1b16,#111719 70%)!important;box-shadow:0 16px 40px rgba(0,0,0,.22)}
+          .hero::before{background:radial-gradient(closest-side,rgba(242,193,78,.18),transparent)!important}
+          .hero .chip{color:#f2c14e!important;border-color:rgba(242,193,78,.35)!important}
+          .hero h2 span{color:#f2c14e!important}
+          .hero-chart .line{stroke:#f2c14e!important}
+          .hero-chart defs linearGradient stop:first-child{stop-color:#f2c14e!important}
+          .hero-stats div{background:rgba(255,255,255,.035)!important;border-color:rgba(255,255,255,.08)!important;border-radius:14px!important}
+          .hero-btn{background:linear-gradient(135deg,#f7d477,#dca12e)!important;color:#241b08!important;box-shadow:0 8px 22px rgba(242,193,78,.16)!important}
+          .hero-btn:hover{box-shadow:0 12px 30px rgba(242,193,78,.24)!important}
+          .sect{color:#f2c14e!important;letter-spacing:.1em!important}
+          .tile{--c:#f2c14e!important;border-radius:18px!important;background:linear-gradient(145deg,#151e21,#11181b)!important;border:1px solid #29373d!important;box-shadow:0 8px 22px rgba(0,0,0,.12)}
+          .tile-ic,.tile-go{color:#f2c14e!important;background:rgba(242,193,78,.10)!important;border-color:rgba(242,193,78,.26)!important}
+          .tile h3{color:#edf2ef!important}
+          .tile p{color:#9aa8a5!important}
+          .menu-footer{color:#778783!important}
+          html[data-sec=faults] header{
+            background:linear-gradient(145deg,#1b1b16,#111719 72%)!important;
+            border:1px solid rgba(242,193,78,.28)!important;border-radius:22px!important;
+            box-shadow:0 12px 30px rgba(0,0,0,.16)!important;
+          }
+          html[data-sec=faults] header h1{font-size:clamp(27px,6.8vw,42px)!important;line-height:1.08!important;letter-spacing:.015em!important}
+          html[data-sec=faults] .eyebrow{color:#f2c14e!important}
+          html[data-sec=faults] .searchbox{background:linear-gradient(#0b1012 82%,transparent)!important}
+          html[data-sec=faults] .searchrow input{
+            background:#151e21!important;color:#e7eeec!important;border:1px solid #29373d!important;
+            border-radius:14px!important;min-height:50px!important;
+          }
+          html[data-sec=faults] .section{
+            background:linear-gradient(145deg,#151e21,#11181b)!important;
+            border:1px solid #29373d!important;border-radius:18px!important;
+          }
+          html[data-sec=faults] .section summary{padding:16px!important}
+          html[data-sec=faults] .section[open]{border-color:rgba(242,193,78,.5)!important}
+          html[data-sec=faults] .num{background:rgba(242,193,78,.12)!important;color:#f2c14e!important;border-color:rgba(242,193,78,.3)!important}
+          html[data-sec=schemes] .header{
+            background:rgba(11,16,18,.94)!important;border-bottom:1px solid #29373d!important;
+            padding:14px 0 10px!important;
+          }
+          html[data-sec=schemes] .title{font-size:clamp(22px,5vw,30px)!important;color:#edf2ef!important}
+          html[data-sec=schemes] .tab{
+            background:linear-gradient(145deg,#151e21,#11181b)!important;border:1px solid #29373d!important;
+            border-radius:14px!important;min-height:52px!important;color:#dfe7e3!important;
+          }
+          html[data-sec=schemes] .tab[aria-pressed=true]{
+            border-color:rgba(242,193,78,.6)!important;background:rgba(242,193,78,.10)!important;
+            box-shadow:inset 0 -3px #f2c14e!important;color:#fff!important;
+          }
+          html[data-sec=schemes] .viewer{background:#131a1d!important;border:1px solid #29373d!important;border-radius:18px!important}
+          html[data-sec=schemes] .viewhead{border-color:#29373d!important}
+          html[data-sec=schemes] .canvas,html[data-sec=schemes] .fullview{border-radius:0!important;background:#e6e8e7!important}
+          html[data-sec=schemes] .notice{background:#131a1d!important;border:1px solid #29373d!important;border-radius:14px!important;padding:12px!important}
+          html[data-sec=brakes] .bar{background:rgba(19,26,29,.96)!important;border-bottom:1px solid #29373d!important}
+          html[data-sec=brakes] .bar input{background:#192226!important;color:#e7eeec!important;border:1px solid #29373d!important;border-radius:14px!important;min-height:48px!important}
+          html[data-sec=brakes] .sec,html[data-sec=brakes] .res{
+            background:linear-gradient(145deg,#151e21,#11181b)!important;border:1px solid #29373d!important;border-radius:16px!important;
+          }
+          html[data-sec=brakes] .sec b,html[data-sec=brakes] .res small,html[data-sec=brakes] .content p.sh{color:#f2c14e!important}
+          html[data-sec=brakes] .sl{border-left-color:#3a4649!important}
+          html[data-sec] button,html[data-sec] .btn,html[data-sec] .ib{
+            border-radius:12px!important;transition:background .18s,border-color .18s,transform .15s!important;
+          }
+          html[data-sec] input,html[data-sec] select{border-radius:12px!important}
+          html[data-sec] button:focus-visible,html[data-sec] input:focus-visible,html[data-sec] a:focus-visible{
+            outline:2px solid #f2c14e!important;outline-offset:2px!important;
+          }
+          @media(max-width:560px){
+            .hub{padding-left:14px!important;padding-right:14px!important}
+            .tile{grid-template-columns:48px 1fr auto!important;gap:11px!important;padding:14px!important}
+            .tile-ic{width:48px!important;height:48px!important;border-radius:14px!important}
+            .hero{border-radius:20px!important;padding:18px 16px!important}
+            .hero-stats{gap:6px!important}
+            .hero-stats div{padding:8px 7px!important}
+          }
+          """
+          css = Path("site/shell.css")
+          css.write_text(css.read_text(encoding="utf-8") + "\\n" + theme_css, encoding="utf-8")
+
+          navjs = Path("site/shell.js")
+          if navjs.exists():
+              js = navjs.read_text(encoding="utf-8")
+              js = js.replace("c:'#4fd3b2'", "c:'#f2c14e'").replace("c:'#f2b441'", "c:'#f2c14e'").replace("c:'#6aa8ff'", "c:'#f2c14e'").replace("c:'#ff7a6b'", "c:'#f2c14e'").replace("c:'#e7eeec'", "c:'#f2c14e'")
+              navjs.write_text(js, encoding="utf-8")
+
           sw = Path("site/sw.js")
           if sw.exists():
               sw.write_text(sw.read_text(encoding="utf-8").replace("profile-app-v1","profile-app-v2"), encoding="utf-8")
