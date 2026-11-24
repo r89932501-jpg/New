@@ -194,6 +194,16 @@ jobs:
 
           p.write_text(s, encoding="utf-8")
 
+          # Clean up the 3ЭС5К handbook header and remove bulk expand/collapse controls.
+          manual = Path("site/3ES5K.html")
+          if manual.exists():
+              h = manual.read_text(encoding="utf-8")
+              h = re.sub(r'<div class="sub">.*?</div>', '', h, flags=re.S)
+              h = re.sub(r'<h1>.*?</h1>', '<h1>Устранение неисправностей<br/>3ЭС5К с поосным регулированием</h1>', h, count=1, flags=re.S)
+              h = re.sub(r'<div class="actions">.*?</div>', '', h, count=1, flags=re.S)
+              h = re.sub(r'<button[^>]*id="(?:openAll|closeAll)"[^>]*>.*?</button>', '', h, flags=re.S)
+              manual.write_text(h, encoding="utf-8")
+
           css = Path("site/shell.css")
           with css.open("a", encoding="utf-8") as f:
               f.write("\n.chip2.pos{padding-right:12px;border-color:rgba(106,168,255,.45);background:rgba(12,17,19,.92)}\n.chip2.pos .k{color:#80b8ff}.chip2.pos .v{color:#e7f2ff;font-size:18px;letter-spacing:.04em}\n")
