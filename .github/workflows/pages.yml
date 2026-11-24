@@ -49,7 +49,7 @@ jobs:
           s = s.replace(".top{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:10px}", ".top{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}")
           s = s.replace(".top{grid-template-columns:repeat(3,minmax(0,1fr))}", ".top{grid-template-columns:repeat(2,minmax(0,1fr))}")
           s = s.replace("УСТРАНЕНИЕ НЕИСПРАВНОСТЕЙ ЭЛЕКТРОВОЗА 3ЭС5К", "УСТРАНЕНИЕ НЕИСПРАВНОСТЕЙ 3ЭС5К С ПООСНЫМ РЕГУЛИРОВАНИЕМ")
-          s = re.sub(r"По пособию\\s+А\\.\\s*А\\.\\s*Мамонтова.*?2022 г\\.", "", s, flags=re.S)
+          s = re.sub(r"По пособию\s+А\.\s*А\.\s*Мамонтова.*?2022 г\.", "", s, flags=re.S)
           s = s.replace("back=S.tripStarted?Math.max(W*.1,S.trainLength+120):W*.1;", "back=S.tripStarted?Math.max(W*.18,S.trainLength+120):W*.18;")
           s = s.replace("back=W*0.1, km=S.kmDraw", "back=W*0.18, km=S.kmDraw")
           s = s.replace("oldBack=oldW*.1", "oldBack=oldW*.18")
