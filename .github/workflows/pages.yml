@@ -1,0 +1,132 @@
+name: Publish Profile web app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unpack app and prepare installable web app
+        run: |
+          set -e
+          mkdir -p site
+          ZIP_FILE="$(find . -maxdepth 1 -type f -iname '*.zip' | head -n 1)"
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ZIP archive not found in repository root"
+            exit 1
+          fi
+          mkdir -p unpacked
+          unzip -q "$ZIP_FILE" -d unpacked
+          INDEX_FILE="$(find unpacked -type f -iname 'index.html' | head -n 1)"
+          if [ -z "$INDEX_FILE" ]; then
+            echo "index.html not found inside the uploaded ZIP"
+            find unpacked -maxdepth 3 -type f | head -n 80
+            exit 1
+          fi
+          APP_DIR="$(dirname "$INDEX_FILE")"
+          cp -a "$APP_DIR"/. site/
+          cat > site/manifest.webmanifest <<'EOF'
+          {
+            "name": "ПРОФИЛЬ",
+            "short_name": "ПРОФИЛЬ",
+            "start_url": "./",
+            "scope": "./",
+            "display": "standalone",
+            "orientation": "landscape",
+            "background_color": "#0b1011",
+            "theme_color": "#0b1011",
+            "icons": [
+              {
+                "src": "icon.svg",
+                "sizes": "any",
+                "type": "image/svg+xml",
+                "purpose": "any maskable"
+              }
+            ]
+          }
+          EOF
+          cat > site/icon.svg <<'EOF'
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <rect width="512" height="512" rx="96" fill="#0b1011"/>
+            <path d="M48 330 L140 250 L205 290 L290 145 L365 205 L464 72" fill="none" stroke="#ff9959" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M48 330 L140 250 L205 290 L290 145 L365 205 L464 72" fill="none" stroke="#4fd6b5" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="290" cy="145" r="15" fill="#ffc34a"/>
+          </svg>
+          EOF
+          cat > site/sw.js <<'EOF'
+          const CACHE = 'profile-app-v1';
+          self.addEventListener('install', event => {
+            self.skipWaiting();
+            event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(['./', './index.html', './manifest.webmanifest', './icon.svg'])).catch(() => {}));
+          });
+          self.addEventListener('activate', event => {
+            event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+          });
+          self.addEventListener('fetch', event => {
+            if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
+            event.respondWith(fetch(event.request).then(response => {
+              const copy = response.clone();
+              caches.open(CACHE).then(cache => cache.put(event.request, copy));
+              return response;
+            }).catch(() => caches.match(event.request).then(response => response || caches.match('./index.html'))));
+          });
+          EOF
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("site/index.html")
+          html = p.read_text(encoding="utf-8")
+          additions = """
+          <meta name="theme-color" content="#0b1011">
+          <meta name="apple-mobile-web-app-capable" content="yes">
+          <meta name="mobile-web-app-capable" content="yes">
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+          <meta name="apple-mobile-web-app-title" content="ПРОФИЛЬ">
+          <link rel="manifest" href="./manifest.webmanifest">
+          <link rel="icon" href="./icon.svg" type="image/svg+xml">
+          <script>
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.error));
+            }
+          </script>
+          """
+          if "</head>" in html.lower():
+              pos = html.lower().find("</head>")
+              html = html[:pos] + additions + "\\n" + html[pos:]
+          else:
+              html = additions + html
+          p.write_text(html, encoding="utf-8")
+          PY
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
