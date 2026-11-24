@@ -46,6 +46,8 @@ jobs:
 
           p = Path("site/index.html")
           s = p.read_text(encoding="utf-8")
+          s = s.replace(".top{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:10px}", ".top{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}")
+          s = s.replace(".top{grid-template-columns:repeat(3,minmax(0,1fr))}", ".top{grid-template-columns:repeat(2,minmax(0,1fr))}")
 
           # Remove all clock displays from the profile screen, leaving the menu clock intact.
           s = s.replace('    <div class="cell"><div class="lbl">Время</div><div class="big num" id="clock">--:--:--</div><div class="sub">Местное · МСК <span class="num" id="mskClock" style="color:#9fd8ff;font-size:14px">--:--:--</span></div></div>', '')
