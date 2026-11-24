@@ -153,6 +153,11 @@ jobs:
           s = s[:train_start] + train_code + s[train_end:]
 
           s = s.replace(
+              '<div class="km-overlay num" id="kmOverlay" aria-live="off">—</div>',
+              '<div class="km-overlay num" id="kmOverlay" aria-live="off">—</div><div class="signal-legend"><span class="signal-legend-mark"></span><span>Светофор · подпись — обозначение</span></div>'
+          )
+
+          s = s.replace(
               '</style><link rel="stylesheet" href="shell.css">',
               '.signal-legend{position:absolute;top:7px;right:10px;z-index:4;display:flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid rgba(242,193,78,.35);border-radius:8px;background:rgba(12,17,19,.78);color:#e7eeec;font:600 10px/1.2 var(--f-ui);pointer-events:none}\n.signal-legend-mark{position:relative;width:8px;height:15px;border-left:2px solid #f2c14e}.signal-legend-mark:before{content:"";position:absolute;left:-5px;top:0;width:8px;height:8px;border-radius:3px;background:#26323a;border:1px solid #f2c14e}.signal-legend-mark:after{content:"";position:absolute;left:-2px;top:3px;width:3px;height:3px;border-radius:50%;background:#f2c14e}@media(max-width:520px){.signal-legend{font-size:9px;top:6px;right:6px;padding:3px 6px}}\n</style><link rel="stylesheet" href="shell.css">'
           )
@@ -195,7 +200,7 @@ jobs:
           </svg>
           EOF
           cat > site/sw.js <<'EOF'
-          const CACHE = 'profile-app-v1';
+          const CACHE = 'profile-app-v3';
           self.addEventListener('install', event => {
             self.skipWaiting();
             event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(['./', './index.html', './manifest.webmanifest', './icon.svg'])).catch(() => {}));
