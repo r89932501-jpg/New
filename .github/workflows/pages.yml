@@ -48,6 +48,10 @@ jobs:
           s = p.read_text(encoding="utf-8")
           s = s.replace(".top{display:grid;grid-template-columns:1.2fr .8fr .8fr;gap:10px}", ".top{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}")
           s = s.replace(".top{grid-template-columns:repeat(3,minmax(0,1fr))}", ".top{grid-template-columns:repeat(2,minmax(0,1fr))}")
+          s = s.replace("back=S.tripStarted?Math.max(W*.1,S.trainLength+120):W*.1;", "back=S.tripStarted?Math.max(W*.18,S.trainLength+120):W*.18;")
+          s = s.replace("back=W*0.1, km=S.kmDraw", "back=W*0.18, km=S.kmDraw")
+          s = s.replace("oldBack=oldW*.1", "oldBack=oldW*.18")
+          s = s.replace("</canvas>", '</canvas><div class="current-position num" id="currentPosition">— км · — пк</div>')
 
           # Remove all clock displays from the profile screen, leaving the menu clock intact.
           s = s.replace('    <div class="cell"><div class="lbl">Время</div><div class="big num" id="clock">--:--:--</div><div class="sub">Местное · МСК <span class="num" id="mskClock" style="color:#9fd8ff;font-size:14px">--:--:--</span></div></div>', '')
@@ -166,7 +170,7 @@ jobs:
           s = s.replace('<div class="signal-legend"><span class="signal-legend-mark"></span><span>Светофор · подпись — обозначение</span></div>', '')
           s = s.replace('<div class="chips" id="chips"><div class="chip2 pos" id="posChip"><span class="k">КМ · ПК</span><b class="v">— · —</b></div></div>', '<div class="chips" id="chips"></div>')
           s = s.replace("  $('kmOverlay').textContent=kmText; $('posChip').querySelector('.v').textContent=Math.floor(km/1000)+' · '+String(pkOf(km)).padStart(2,'0');", '')
-          s = s.replace("const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';\n  $('kmOverlay').textContent=kmText; $('posChip').querySelector('.v').textContent=Math.floor(km/1000)+' · '+String(pkOf(km)).padStart(2,'0');", '')
+          s = s.replace("const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';\n  $('kmOverlay').textContent=kmText; $('posChip').querySelector('.v').textContent=Math.floor(km/1000)+' · '+String(pkOf(km)).padStart(2,'0');", "const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк'; $('currentPosition').textContent=kmText;")
 
           # Replace preset scale buttons with two continuous, touch-friendly sliders.
           old_controls = '      <div class="tbg"><span class="lbl">Масштаб, км</span>\n        <div class="seg" id="segWin"><button type="button" data-v="1" aria-pressed="false">1</button><button type="button" data-v="2" aria-pressed="false">2</button><button type="button" data-v="3" aria-pressed="false">3</button><button type="button" data-v="5" aria-pressed="true">5</button><button type="button" data-v="10" aria-pressed="false">10</button><button type="button" data-v="20" aria-pressed="false">20</button></div></div>\n      <div class="tbg"><span class="lbl">Масштаб по высоте, м</span>\n        <div class="seg" id="segVs"><button type="button" data-v="auto" aria-pressed="true">Авто</button><button type="button" data-v="20" aria-pressed="false">20</button><button type="button" data-v="40" aria-pressed="false">40</button><button type="button" data-v="80" aria-pressed="false">80</button></div></div>'
@@ -180,7 +184,7 @@ jobs:
           s = s.replace("setPressed('segWin',String(opts.reduce((a,b)=>Math.abs(b-S.win)<Math.abs(a-S.win)?b:a,opts[0])));", "winScale.value=String(S.win); syncScaleLabels();")
           css = Path("site/shell.css")
           with css.open("a", encoding="utf-8") as f:
-              f.write("\n.tb .scale-control{display:flex;flex-direction:column;gap:3px;min-width:150px;flex:1 1 180px}.tb .scale-control .lbl{white-space:nowrap}.tb .scale-control b{color:var(--warn);font-variant-numeric:tabular-nums}.tb .scale-control input[type=range]{width:100%;min-width:140px;height:24px;margin:0;touch-action:pan-x}.tb .btn{flex:0 0 auto}\n")
+              f.write("\n.current-position{position:absolute;left:10px;bottom:10px;z-index:5;padding:6px 10px;border:1px solid rgba(106,168,255,.48);border-radius:8px;background:rgba(8,14,17,.9);color:#e7f2ff;font:700 14px/1.2 var(--f-num);letter-spacing:.02em;pointer-events:none;box-shadow:0 2px 10px rgba(0,0,0,.25)}@media(max-width:520px){.current-position{left:7px;bottom:7px;padding:5px 8px;font-size:12px}}\n.tb .scale-control{display:flex;flex-direction:column;gap:3px;min-width:150px;flex:1 1 180px}.tb .scale-control .lbl{white-space:nowrap}.tb .scale-control b{color:var(--warn);font-variant-numeric:tabular-nums}.tb .scale-control input[type=range]{width:100%;min-width:140px;height:24px;margin:0;touch-action:pan-x}.tb .btn{flex:0 0 auto}\n")
 
           p.write_text(s, encoding="utf-8")
 
