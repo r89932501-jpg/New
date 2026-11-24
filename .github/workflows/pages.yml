@@ -68,6 +68,9 @@ jobs:
               "const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';\n  $('kmOverlay').textContent=kmText; $('posChip').querySelector('.v').textContent=Math.floor(km/1000)+' · '+String(pkOf(km)).padStart(2,'0');"
           )
 
+          s = s.replace("const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк';", "const kmText=Math.floor(km/1000)+' км '+String(pkOf(km)).padStart(2,'0')+' пк'; $('currentPosition').textContent=kmText;")
+          s = s.replace("ctx.fillText(String(km/1000),x,axisY-3);", "ctx.fillText(String(km/1000),x,axisY-13);")
+
           # Make the signal markers larger and display signal identifiers at useful zoom levels.
           sig_start = s.index("  // Светофоры: короткие столбики, привязанные непосредственно к линии профиля")
           sig_end = s.index("  ctx.restore();\n  // верхняя ось:", sig_start)
